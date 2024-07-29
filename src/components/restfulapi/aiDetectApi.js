@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete, apiPut } from "../../assets/js/baseApi";
+import { apiGet, apiPost, apiDelete, apiPut, apiPostfile } from "../../assets/js/baseApi";
 
 let getAiDetectByPageApi = function (keywords, currentPage, limit) {
     let data = {
@@ -15,20 +15,19 @@ let getAiDetectByPageApi = function (keywords, currentPage, limit) {
     })
 }
 
-let addAiDetectApi = function ({ name, channelId, aiModelId, notification, isShowScreen}) {
+let addAiDetectApi = function (file) {
+    let formdata = new FormData();
+    
+    formdata.append("file", file);
+    let config = {
+        headers: {'Content-Type': 'multipart/form-data'}
+    };
     return new Promise((resolve, reject) => {
-        let data = {
-            name,
-            channelId,
-            aiModelId,
-            notification,
-            isShow: isShowScreen
-        }
-        apiPost("/v1/aiDetect", data).then((data) => {
-            resolve(data);
+        apiPostfile('/v1/aiDetect', formdata, config).then((data) => {
+            resolve(data)
         }).catch((err) => {
-            resolve(err.response);
-        })
+            resolve(err.response)
+        }) 
     })
 }
 
