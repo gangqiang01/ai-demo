@@ -5,7 +5,7 @@
                 <div class="left">
                     <div class="title">检测视频</div>
                     <div class="detect_video">
-                        <video id="inputVideoPlayer" autoplay controls width="420" height="420"></video>
+                        <video id="inputVideoPlayer" autoplay loop controls width="420" height="420"></video>
                     </div> 
                 </div>
             </el-col> 
@@ -25,15 +25,31 @@
                         >
                         <i class="fa fa-podcast m-r-10"></i>
                         开始检测
-                    </el-button>
+                        </el-button>
+                    </div>
+                    <div class="item">
+                        <div class="sub">选择已检测的文件</div>
+                        <el-select 
+                        v-model="detectedFilename"  
+                        class="max-w-210" 
+                        size="mini"
+                        @change="selectDetectedFile">
+                            <el-option
+                                v-for="item in fileOptions"
+                                :key="item.filename"
+                                :label="item.filename"
+                                :value="item.filename">
+                            </el-option>
+                        </el-select>
                     </div>
                 </div>
             </el-col> 
             <el-col :span="10">
                 <div class="right"> 
-                    <div class="title">检测结果</div> 
-                    <div class="detect_video" v-loading="detectLoading">
-                        <video id="outputVideoPlayer" autoplay controls width="420" height="420"></video>
+                    <div class="title" v-if="status==0">检测中</div> 
+                    <div class="title" v-else>检测结果</div> 
+                    <div class="detect_video" :loading="detectLoading">
+                        <video id="outputVideoPlayer" autoplay loop controls width="420" height="420"></video>
                     </div>
                 </div>
             </el-col>
@@ -43,9 +59,9 @@
 <script>
 
 import handleResponse from "../../components/restfulapi/handleResponse";
-import {    
-    getAiDetectImageApi,
-    getAiDetectVideoApi,
+import {  
+    getAiDetectedFilesApi,
+    getAiDetectStatusApi, 
     addAiDetectApi,
     deleteAiDetectApi,} from "../../components/restfulapi/aiDetectApi";
 
@@ -56,15 +72,24 @@ export default {
             inputSrc: "",
             outputSrc: "",
             file: null,
-            detectLoading: false
+            detectLoading: false,
+            interval : null,
+            status: 1,
+            fileOptions:[],
+            detectedFilename: ""
         }
     },
 
     methods: {
+        selectDetectedFile(){
+            document.getElementById('outputVideoPlayer').src = "/v1/aiDetect/video/"+this.detectedFilename
+            document.getElementById('inputVideoPlayer').src = "/v1/aiDetect/video/"+this.detectedFilename+"?type=data"
+        },
 
         dispatchUploadFile(){
              this.$refs.licenseFile.dispatchEvent(new MouseEvent('click')) 
         },
+
         getlicenseFile(event){
             this.licenseFile = null;
             this.file = event.target.files[0]; 
@@ -76,7 +101,8 @@ export default {
 
         detect(){
             this.detectLoading = true;
-            addAiDetectApi(this.file).then((data) => {
+            this.status = 0;
+            addAiDetectApi(this.file, "video").then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
                     if(res.code === 200){
@@ -87,16 +113,41 @@ export default {
                     }
                 })
             })
+        },
+
+        getDetectStatus(){
+            getAiDetectStatusApi(this.file.name).then((data) => {
+                handleResponse(data, (res) => {
+                    if(res.code === 200){
+                        if (res.data==1){
+                            this.status=1;
+                            window.clearInterval(this.interval)
+                            document.getElementById('outputVideoPlayer').src = "/v1/aiDetect/video/"+this.file.name
+
+                        }
+                    }
+                })
+            })
+        },
+
+        getDetectedFiles(){
+            getAiDetectedFilesApi("video").then((data) => {
+                handleResponse(data, (res) => {
+                    if(res.code === 200){
+                        this.fileOptions = res.data;
+                    }
+                })
+            })
         }
     },
     watch: {
         
     },
     created() {
-        
+        this.getDetectedFiles();
     },
     beforeDestroy() {
-        
+        window.clearInterval(this.interval)
     },
 }
 </script>
@@ -158,9 +209,7 @@ export default {
         }
         .center{
             text-align: center;
-            .button{
-                margin-top: 20px;
-            }
+
             .uploadBtn{
                 display: inline-block;
                 padding: 10px;
@@ -172,6 +221,15 @@ export default {
         }
         .right{
             text-align: center;
+        }
+
+        .item{
+            margin-top: 10px;
+            .sub{
+                font-size: 14px;
+                color: #aeaeae;
+                margin-bottom: 5px;
+            }
         }
     }
 </style>

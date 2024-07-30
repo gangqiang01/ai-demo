@@ -8,21 +8,8 @@ let cancelArr = [];
 //intercept axios api 
 axios.interceptors.request.use((config) => {
     // before send request
-    if(config.url.indexOf("/repoapps")<0 && config.url.indexOf("/repo/")<0){
-        if(config.method === "put"){
-            // send msg to exec device
-            config.timeout = 1000*15;
-        }else if(config.method === "post"){
-            config.timeout = 1000*30;
-        }else{
-            config.timeout = 1000*120;
-        }
-        config.withCredentials = false;
-        config.headers.accesstoken = cookie.getCookie("apphubToken");
-        config.cancelToken = new axios.CancelToken((cancel) => {
-            cancelArr.push({cancel});
-        })
-    }
+    config.timeout = 1000*12000;
+    config.withCredentials = false;
     return config;
 }, function (err){
     return Promise.reject(err);

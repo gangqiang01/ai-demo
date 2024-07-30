@@ -27,11 +27,27 @@
                         开始检测
                     </el-button>
                     </div>
+                    <div class="item">
+                        <div class="sub">选择已检测的文件</div>
+                        <el-select 
+                        v-model="detectedFilename"  
+                        class="max-w-210" 
+                        size="mini"
+                        @change="selectDetectedFile">
+                            <el-option
+                                v-for="item in fileOptions"
+                                :key="item.filename"
+                                :label="item.filename"
+                                :value="item.filename">
+                            </el-option>
+                        </el-select>
+                    </div>
                 </div>
             </el-col> 
             <el-col :span="10">
                 <div class="right"> 
-                    <div class="title">检测结果</div> 
+                    <div class="title" v-if="imageStatus==0">检测中</div> 
+                    <div class="title" v-else>检测结果</div> 
                     <div class="detect_img" v-loading="detectLoading">
                         <el-image :src="outputSrc" fit="fill" :preview-src-list="[outputSrc]"></el-image> 
                     </div>
@@ -44,8 +60,8 @@
 
 import handleResponse from "../../components/restfulapi/handleResponse";
 import {    
-    getAiDetectImageApi,
-    getAiDetectVideoApi,
+    getAiDetectedFilesApi,
+    getAiDetectStatusApi, 
     addAiDetectApi,
     deleteAiDetectApi,} from "../../components/restfulapi/aiDetectApi";
 
@@ -56,12 +72,19 @@ export default {
             inputSrc: "",
             outputSrc: "",
             file: null,
-            detectLoading: false
+            detectLoading: false,
+            interval : null,
+            imageStatus: 1,
+            fileOptions:[],
+            detectedFilename: ""
         }
     },
 
     methods: {
-
+        selectDetectedFile(){
+            this.outputSrc = "/v1/aiDetect/image/"+this.detectedFilename
+            this.inputSrc = "/v1/aiDetect/image/"+this.detectedFilename+"?type=data"
+        },
         dispatchUploadFile(){
              this.$refs.licenseFile.dispatchEvent(new MouseEvent('click')) 
         },
@@ -79,10 +102,12 @@ export default {
 
         detect(){
             this.detectLoading = true;
-            addAiDetectApi(this.file).then((data) => {
+            this.imageStatus=0;
+            addAiDetectApi(this.file, "dir").then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
                     if(res.code === 200){
+                        this.imageStatus=1
                         this.outputSrc = "/v1/aiDetect/image/"+this.file.name
                         this.$swal("", this.$t('global.success'), "success", {button: this.$t('global.confirm')})
                     }else{
@@ -90,16 +115,48 @@ export default {
                     }
                 })
             })
+        },
+        getDetectStatus(){
+            getAiDetectStatusApi(this.file.name).then((data) => {
+                handleResponse(data, (res) => {
+                    if(res.code === 200){
+                        if (res.data==1){
+                            this.imageStatus=1;
+                            this.outputSrc = "/v1/aiDetect/image/"+this.file.name
+                        }else{
+                            this.imageStatus=0;
+                        }
+                    }
+                })
+            })
+        },
+
+        getDetectedFiles(){
+            getAiDetectedFilesApi("image").then((data) => {
+                handleResponse(data, (res) => {
+                    if(res.code === 200){
+                        this.fileOptions = res.data;
+                    }
+                })
+            })
         }
     },
+
     watch: {
         
     },
+
     created() {
-        
+        this.interval = window.setInterval(() => {
+            if(this.file!= null&& this.file.name){
+                this.getDetectStatus()
+            }
+        }, 3000);
+        this.getDetectedFiles();
     },
+
     beforeDestroy() {
-        
+        window.clearInterval(this.interval)
     },
 }
 </script>
@@ -160,9 +217,6 @@ export default {
         }
         .center{
             text-align: center;
-            .button{
-                margin-top: 20px;
-            }
             .uploadBtn{
                 display: inline-block;
                 padding: 10px;
@@ -174,6 +228,16 @@ export default {
         }
         .right{
             text-align: center;
+        }
+
+
+        .item{
+            margin-top: 10px;
+            .sub{
+                font-size: 14px;
+                color: #aeaeae;
+                margin-bottom: 5px;
+            }
         }
     }
 </style>
