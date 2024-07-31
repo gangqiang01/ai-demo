@@ -48,7 +48,7 @@
                 <div class="right"> 
                     <div class="title" v-if="status==0">检测中</div> 
                     <div class="title" v-else>检测结果</div> 
-                    <div class="detect_video" :loading="detectLoading">
+                    <div class="detect_video" v-loading="detectLoading">
                         <video id="outputVideoPlayer" autoplay loop controls width="420" height="420"></video>
                     </div>
                 </div>
@@ -105,11 +105,13 @@ export default {
             addAiDetectApi(this.file, "video").then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
+                    window.clearInterval(this.interval)
+                    this.interval = window.setInterval(() => {
+                        this.getDetectStatus();
+                    }, 3000)
                     if(res.code === 200){
                         document.getElementById('outputVideoPlayer').src = "/v1/aiDetect/video/"+this.file.name
                         this.$swal("", this.$t('global.success'), "success", {button: this.$t('global.confirm')})
-                    }else{
-                        _g.handleError(res)
                     }
                 })
             })
@@ -186,6 +188,15 @@ export default {
     .el-image__error{
         display: none
     }
+    .right{
+        .el-loading-spinner{
+            top: 0;
+            margin-top: -21px;
+            width: 100%;
+            text-align: center;
+            position: absolute;
+        }
+    }
 </style>
 <style lang="scss" scoped>
     .detect{
@@ -221,6 +232,12 @@ export default {
         }
         .right{
             text-align: center;
+            .el-loading-spinner{
+                margin-top: -21px;
+                width: 100%;
+                text-align: center;
+                position: absolute;
+            }
         }
 
         .item{
