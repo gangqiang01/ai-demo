@@ -46,7 +46,7 @@
             </el-col> 
             <el-col :span="10">
                 <div class="right"> 
-                    <div class="title" v-if="imageStatus==0">检测中</div> 
+                    <div class="title" v-if="imageStatus==0">检测中...</div> 
                     <div class="title" v-else>检测结果</div> 
                     <div class="detect_img" v-loading="detectLoading">
                         <el-image :src="outputSrc" fit="fill" :preview-src-list="[outputSrc]"></el-image> 
@@ -103,6 +103,11 @@ export default {
         detect(){
             this.detectLoading = true;
             this.imageStatus=0;
+            this.interval = window.setInterval(() => {
+                if(this.file!= null&& this.file.name){
+                    this.getDetectStatus()
+                }
+            }, 3000);
             addAiDetectApi(this.file, "dir").then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
@@ -121,6 +126,7 @@ export default {
                 handleResponse(data, (res) => {
                     if(res.code === 200){
                         if (res.data==1){
+                            window.clearInterval(this.interval)
                             this.imageStatus=1;
                             this.outputSrc = "/v1/aiDetect/image/"+this.file.name
                         }else{
@@ -147,11 +153,7 @@ export default {
     },
 
     created() {
-        this.interval = window.setInterval(() => {
-            if(this.file!= null&& this.file.name){
-                this.getDetectStatus()
-            }
-        }, 3000);
+        
         this.getDetectedFiles();
     },
 

@@ -8,7 +8,7 @@ let cancelArr = [];
 //intercept axios api 
 axios.interceptors.request.use((config) => {
     // before send request
-    config.timeout = 1000*12000;
+    config.timeout = 1000*30;
     config.withCredentials = false;
     return config;
 }, function (err){

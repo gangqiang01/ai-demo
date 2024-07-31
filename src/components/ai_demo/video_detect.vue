@@ -46,7 +46,7 @@
             </el-col> 
             <el-col :span="10">
                 <div class="right"> 
-                    <div class="title" v-if="status==0">检测中</div> 
+                    <div class="title" v-if="status==0">检测中...</div> 
                     <div class="title" v-else>检测结果</div> 
                     <div class="detect_video" v-loading="detectLoading">
                         <video id="outputVideoPlayer" autoplay loop controls width="420" height="420"></video>
@@ -102,13 +102,13 @@ export default {
         detect(){
             this.detectLoading = true;
             this.status = 0;
+            window.clearInterval(this.interval)
+            this.interval = window.setInterval(() => {
+                this.getDetectStatus();
+            }, 5000)
             addAiDetectApi(this.file, "video").then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
-                    window.clearInterval(this.interval)
-                    this.interval = window.setInterval(() => {
-                        this.getDetectStatus();
-                    }, 3000)
                     if(res.code === 200){
                         document.getElementById('outputVideoPlayer').src = "/v1/aiDetect/video/"+this.file.name
                         this.$swal("", this.$t('global.success'), "success", {button: this.$t('global.confirm')})
@@ -122,10 +122,13 @@ export default {
                 handleResponse(data, (res) => {
                     if(res.code === 200){
                         if (res.data==1){
+                            this.detectLoading = false;
                             this.status=1;
                             window.clearInterval(this.interval)
                             document.getElementById('outputVideoPlayer').src = "/v1/aiDetect/video/"+this.file.name
 
+                        }else{
+                            this.imageStatus=0;
                         }
                     }
                 })
