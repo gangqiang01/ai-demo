@@ -1,9 +1,12 @@
 import { apiGet, apiPost, apiDelete, apiPut, apiPostfile } from "../../assets/js/baseApi";
 
-let getAiDetectStatusApi = function (filename) {
+let getAiDetectStatusApi = function (filename, module) {
 
     return new Promise((resolve, reject) => {
-        apiGet("/v1/aiDetect/status/"+filename).then((data) => {
+        let data={
+            module
+        }
+        apiGet("/v1/aiDetect/status/"+filename, data).then((data) => {
             resolve(data);
         }).catch((err) => {
             resolve(err.response);
@@ -11,9 +14,10 @@ let getAiDetectStatusApi = function (filename) {
     })
 }
 
-let getAiDetectedFilesApi = function (type) {
+let getAiDetectedFilesApi = function (type, module) {
     let data = {
-        type
+        type,
+        module
     }
     return new Promise((resolve, reject) => {
         apiGet("/v1/aiDetect/detected", data).then((data) => {
@@ -24,7 +28,7 @@ let getAiDetectedFilesApi = function (type) {
     })
 }
 
-let addAiDetectApi = function (file, type) {
+let addAiDetectApi = function (file, type, module) {
     let formdata = new FormData();
     
     formdata.append("file", file);
@@ -32,7 +36,7 @@ let addAiDetectApi = function (file, type) {
         headers: {'Content-Type': 'multipart/form-data'}
     };
     return new Promise((resolve, reject) => {
-        apiPostfile('/v1/aiDetect/'+type, formdata, config).then((data) => {
+        apiPostfile('/v1/aiDetect/'+type+"/"+module, formdata, config).then((data) => {
             resolve(data)
         }).catch((err) => {
             resolve(err.response)
@@ -50,24 +54,10 @@ let deleteAiDetectApi = function (id) {
     })
 }
 
-let updateAiDetectApi = function (id, status, notification) {
-    return new Promise((resolve, reject) => {
-        let data = {
-            status,
-            notification,
-        }
-        apiPut("/v1/aiDetect/" + id, data).then((data) => {
-            resolve(data);
-        }).catch((err) => {
-            resolve(err.response);
-        })
-    })
-}
 
 export {
     getAiDetectedFilesApi,
     getAiDetectStatusApi,
     addAiDetectApi,
-    deleteAiDetectApi,
-    updateAiDetectApi
+    deleteAiDetectApi
 }

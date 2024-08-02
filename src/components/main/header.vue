@@ -14,7 +14,6 @@
                     <span class="subTitle">
                         AI-Demo
                     </span>
-                    
                 </li>
             </ul>
         </div>
@@ -257,5 +256,18 @@
 
 </style>
 <script>
+export default{
+    name: 'mainHeader',
+    data(){
+
+    },
+    methods:{
+        collapseAsideNavbar(){
+            this.$emit("collapseAsideNavbar", "")
+        },
+    }
+    
+}
+
 </script>
 
