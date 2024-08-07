@@ -109,6 +109,7 @@ export default {
                     this.getDetectStatus()
                 }
             }, 3000);
+            this.outputSrc = "";
             addAiDetectApi(this.file, "dir", this.module).then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {

@@ -107,6 +107,7 @@ export default {
             this.interval = window.setInterval(() => {
                 this.getDetectStatus();
             }, 5000)
+            document.getElementById('outputVideoPlayer').src="";
             addAiDetectApi(this.file, "video", this.module).then((data) => {
                 this.detectLoading = false;
                 handleResponse(data, (res) => {
